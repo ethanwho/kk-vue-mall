@@ -37,7 +37,7 @@
 </script>
 
 <style scoped>
-.tabbar{
+/* .tabbar{
   z-index: 999;
-}
+} */
 </style>

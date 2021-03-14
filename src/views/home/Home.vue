@@ -39,6 +39,7 @@ import BackTop from 'components/content/backTop/BackTop'
 
 import {getHomeMultidata, getHomeGoods} from "network/home"
 import {debounce} from 'common/utils'
+import {itemListenerMixin} from 'common/mixin'
 
 export default {
     name: "Home",
@@ -52,6 +53,7 @@ export default {
         Scroll,
         BackTop
     },
+    mixins: [itemListenerMixin],
     data(){
         return {
             banners: [],
@@ -65,7 +67,7 @@ export default {
             isShowBackTop: false,
             tabOffsetTop: 0,
             isTabFixed: false,
-            saveY: 0
+            saveY: 0,
         }
     },
     computed: {
@@ -81,23 +83,20 @@ export default {
         this.getHomeGoods('sell')
     },
     mounted() {
-        const refresh = debounce(this.$refs.scroll.refresh, 50)    //refresh有闭包
-        this.$bus.$on('itemImageLoad', ()=>{
-            // console.log("refresh")
-            // this.$refs.scroll.refresh()
-
-            refresh()
-        })
     },
     destroyed() {
-        console.log("home destryed")
+        console.log("home destroyed")
     },
     activated() {
         this.$refs.scroll.scrollTo(0, this.saveY, 0)
         this.$refs.scroll.refresh()
     },
     deactivated() {
+        //1.保存Y值
         this.saveY = this.$refs.scroll.getScrollY()
+
+        //2.取消全局事件itemImageLoad的监听
+        this.$bus.$off('itemImageLoad', this.itemImgListener)
     },
     methods: {
         // 事件监听相关的方法
@@ -113,6 +112,7 @@ export default {
                     this.currentType = 'sell'
                     break
             }
+            //让两个TabControl的currentIndex保持一致
             this.$refs.tabControl1.currentIndex = index
             this.$refs.tabControl2.currentIndex = index
         },

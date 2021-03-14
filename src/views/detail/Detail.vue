@@ -7,6 +7,8 @@
         <detail-shop-info :shop="shop"/>
         <detail-goods-info :detail-info="detailInfo" @imageLoad="imageLoad"/>
         <detail-param-info :param-info="paramInfo"/>
+        <detail-comment-info :comment-info="commentInfo"/>
+        <goods-list :goods="recommends"/>
       </scroll>
   </div>
 </template>
@@ -18,10 +20,14 @@ import DetailBaseInfo from './childComps/DetailBaseInfo'
 import DetailShopInfo from './childComps/DetailShopInfo'
 import DetailGoodsInfo from './childComps/DetailGoodsInfo'
 import DetailParamInfo from './childComps/DetailParamInfo'
+import DetailCommentInfo from './childComps/DetailCommentInfo'
 
 import Scroll from 'components/common/scroll/Scroll'
+import GoodsList from 'components/content/goods/GoodsList'
 
-import {getDetail, Goods, Shop, GoodsParam} from 'network/detail'
+import {getDetail, Goods, Shop, GoodsParam, getRecommend} from 'network/detail'
+import {debounce} from 'common/utils'
+import {itemListenerMixin} from 'common/mixin'
 
 export default {
   name: 'Detail',
@@ -32,8 +38,11 @@ export default {
     DetailShopInfo,
     Scroll,
     DetailGoodsInfo,
-    DetailParamInfo
+    DetailParamInfo,
+    DetailCommentInfo,
+    GoodsList
   },
+  mixins: [itemListenerMixin],
   data() {
     return {
       iid: null,
@@ -41,15 +50,18 @@ export default {
       goods: {},
       shop: {},
       detailInfo: {},
-      paramInfo: {}
+      paramInfo: {},
+      commentInfo: {},
+      recommends: [],
     }
   },
   created() {
     this.iid = this.$route.params.iid
 
     getDetail(this.iid).then(res => {
-      console.log(res)
+      // console.log(res)
       const data = res.result
+
       this.topImages = data.itemInfo.topImages
 
       this.goods = new Goods(data.itemInfo, data.columns, data.shopInfo.services)
@@ -59,7 +71,21 @@ export default {
       this.detailInfo = data.detailInfo
 
       this.paramInfo = new GoodsParam(data.itemParams.info, data.itemParams.rule)
+
+      if(data.rate.cRate !== 0) {
+        this.commentInfo = data.rate.list[0]
+      }
     })
+
+    getRecommend().then(res => {
+      // console.log(res)
+      this.recommends = res.data.list
+    })
+  },
+  mounted() {
+  },
+  destroyed() {
+    this.$bus.$off('itemImgLoad', this.itemImgListener)
   },
   methods: {
     imageLoad() {

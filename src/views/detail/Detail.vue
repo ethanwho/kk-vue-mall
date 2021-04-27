@@ -13,6 +13,7 @@
       </scroll>
       <detail-bottom-bar @addCart="addToCart"/>
       <back-top @click.native="backClick" v-show="isShowBackTop"/>
+      <!-- <toast :message='message' :show="isShow"/> -->
   </div>
 </template>
 
@@ -28,10 +29,13 @@ import DetailBottomBar from './childComps/DetailBottomBar'
 
 import Scroll from 'components/common/scroll/Scroll'
 import GoodsList from 'components/content/goods/GoodsList'
+// import Toast from 'components/common/toast/Toast'
 
 import {getDetail, Goods, Shop, GoodsParam, getRecommend} from 'network/detail'
 import {debounce} from 'common/utils'
 import {itemListenerMixin, backTopMixin} from 'common/mixin'
+
+import { mapActions } from 'vuex'
 
 export default {
   name: 'Detail',
@@ -45,7 +49,8 @@ export default {
     DetailParamInfo,
     DetailCommentInfo,
     GoodsList,
-    DetailBottomBar
+    DetailBottomBar,
+    // Toast
   },
   mixins: [itemListenerMixin, backTopMixin],
   data() {
@@ -60,7 +65,9 @@ export default {
       recommends: [],
       themeTopYs: [],
       getThemeTopY: null,
-      currentIndex: 0
+      currentIndex: 0,
+      // message: '',
+      // isShow: false
     }
   },
   created() {
@@ -129,6 +136,7 @@ export default {
     this.$bus.$off('itemImgLoad', this.itemImgListener)
   },
   methods: {
+    ...mapActions(['addCart']),
     imageLoad() {
       this.$refs.scroll.refresh()
 
@@ -158,10 +166,24 @@ export default {
       product.price = this.goods.realPrice
       product.iid = this.iid
 
-      //2.将商品添加到购物车里
+      //2.将商品添加到购物车里，且添加成功后打印
       // this.$store.cartList.push(product)
       // this.$store.commit('addCart', product)
-      this.$store.dispatch('addCart', product)
+      this.$store.dispatch('addCart', product).then(res => {
+        // this.isShow = true;
+        // this.message = res;
+
+        // setTimeout(() => {
+        //   this.isShow = false
+        //   this.message = ''
+        // }, 1500);
+
+        this.$toast.show(res, 1500)
+      })
+      // this.addCart(product).then(res => {
+      //   console.log(res);
+      // })
+
     }
   }
 }
